@@ -1,31 +1,20 @@
-import { useEffect, useState } from 'react';
+ let messages = [];
 
-export default function Home() {
-  const [msgs, setMsgs] = useState([]);
+export default function handler(req, res) {
+  if (req.method === 'POST') {
+    const { message } = req.body;
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const res = await fetch('/api/addMessage');
-      const data = await res.json();
-      setMsgs(data);
-    };
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
 
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 2000); // auto-refresh every 2 sec
+    messages.push({ msg: message, time: new Date().toISOString() });
+    return res.status(200).json({ success: true, message: 'Message added' });
+  }
 
-    return () => clearInterval(interval);
-  }, []);
+  if (req.method === 'GET') {
+    return res.status(200).json(messages);
+  }
 
-  return (
-    <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      <h2>📩 Live Messages</h2>
-      <ul>
-        {msgs.map((item, index) => (
-          <li key={index}>
-            <strong>{item.time}:</strong> {item.msg}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-                  }
+  return res.status(405).json({ error: 'Method not allowed' });
+}
